@@ -8,19 +8,17 @@ import { AudioManager } from './audio/audio.js';
 import { Leaderboard } from './leaderboard/leaderboard.js';
 
 // Inicjalizacja gry
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
     const canvas = document.getElementById('gameCanvas');
-    const levelManager = new LevelManager();
-    const ui = new UI(async (difficulty) => {
-        const levelData = await levelManager.loadRandomLevel(difficulty);
-        // Inicjalizacja silnika z wybranym poziomem
-        const engine = new Engine(canvas);
-        engine.level = levelData;
-        engine.mapWidth = levelData.tiles[0].length;
-        engine.mapHeight = levelData.tiles.length;
-        engine.player = new Player(levelData.playerStart.x, levelData.playerStart.y);
-        engine.camera = new Camera(engine.player, canvas.width, canvas.height, engine.mapWidth * 32, engine.mapHeight * 32);
-        engine.isLoaded = true;
-        engine.start();
-    });
+    // Wczytaj domyślny poziom tilesowy (easy/level1.json)
+    const response = await fetch('./levels/easy/level1.json');
+    const levelData = await response.json();
+    const engine = new Engine(canvas);
+    engine.level = levelData;
+    engine.mapWidth = levelData.tiles[0].length;
+    engine.mapHeight = levelData.tiles.length;
+    engine.player = new Player(levelData.playerStart.x, levelData.playerStart.y);
+    engine.camera = new Camera(engine.player, canvas.width, canvas.height, engine.mapWidth * 32, engine.mapHeight * 32);
+    engine.isLoaded = true;
+    engine.start();
 });
