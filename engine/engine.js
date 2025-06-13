@@ -31,6 +31,8 @@ export class Engine {
         this.mapHeight = 15; // przykładowa wysokość mapy w kafelkach
         this.player = new Player(levelData.playerStart.x, levelData.playerStart.y);
         this.camera = new Camera(this.player, this.canvas.width, this.canvas.height, this.mapWidth * this.tileSize, this.mapHeight * this.tileSize);
+        // Dodaj platformy do world
+        this.platforms = (levelData.platforms || []);
         this.isLoaded = true;
     }
 
@@ -42,10 +44,29 @@ export class Engine {
     }
 
     update() {
-        // Przykład: world API do kolizji
+        // World API do kolizji z platformami i granicami mapy
         const world = {
-            isSolid: (x, y) => false // uproszczone, do rozbudowy
+            isSolid: (x, y) => {
+                // Sprawdź czy poza mapą
+                if (x < 0 || y < 0 || x >= this.mapWidth || y >= this.mapHeight) return true;
+                // Sprawdź kolizję z platformami
+                for (const p of this.platforms) {
+                    if (
+                        x * this.tileSize < p.x + p.width &&
+                        x * this.tileSize + this.tileSize > p.x &&
+                        y * this.tileSize < p.y + p.height &&
+                        y * this.tileSize + this.tileSize > p.y
+                    ) return true;
+                }
+                return false;
+            }
         };
+        // Ogranicz gracza do mapy (nie pozwól spaść poniżej mapy)
+        if (this.player.y > (this.mapHeight * this.tileSize - this.player.height)) {
+            this.player.y = this.mapHeight * this.tileSize - this.player.height;
+            this.player.vy = 0;
+            this.player.grounded = true;
+        }
         this.player.update(this.player.input || {isDown:()=>false,isPressed:()=>false}, world, [], this.camera);
         // Przyciąganie ściany (np. klawisz Q)
         if (this.player.input && this.player.input.isDown && this.player.input.isDown('q')) {
